@@ -1,6 +1,6 @@
 {
-    "name": "nelmio/api-doc-bundle",
-    "description": "Generates documentation for your REST API from annotations",
+    "name": "noma-solutions/api-doc-bundle",
+    "description": "Enhanced version of NelmioApiDoc that generates documentation for your REST API from annotations",
     "keywords": ["api", "documentation", "doc", "rest"],
     "type": "symfony-bundle",
     "license": "MIT",
@@ -12,6 +12,10 @@
         {
             "name": "Symfony Community",
             "homepage": "https://github.com/nelmio/NelmioApiDocBundle/contributors"
+        },
+        {
+            "name": "Noma Solutions",
+            "homepage": "https://nomasolutions.pl"
         }
     ],
     "require": {

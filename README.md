@@ -1,10 +1,17 @@
 NelmioApiDocBundle
 ==================
 
-[![Build Status](https://img.shields.io/github/workflow/status/nelmio/NelmioApiDocBundle/CI?style=flat-square)](https://github.com/nelmio/NelmioApiDocBundle/actions?query=workflow:CI) 
-[![Total Downloads](https://poser.pugx.org/nelmio/api-doc-bundle/downloads)](https://packagist.org/packages/nelmio/api-doc-bundle)
-[![Latest Stable
-Version](https://poser.pugx.org/nelmio/api-doc-bundle/v/stable)](https://packagist.org/packages/nelmio/api-doc-bundle)
+## About our Fork
+
+**Disclaimer**: This is fork of [nelmio/NelmioApiDocBundle](https://github.com/nelmio/NelmioApiDocBundle) created 
+for [our](https://nomasolutions.pl) internal use.
+
+First of all we needed to change the mechanism behind model registration so the JMS model hash
+won't be created based on groups and FQCN but on fields list.
+
+Let's find out if we can manage to do this :) 
+
+## Introduction
 
 The **NelmioApiDocBundle** bundle allows you to generate a decent documentation
 for your APIs.
