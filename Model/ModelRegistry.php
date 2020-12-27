@@ -59,6 +59,11 @@ final class ModelRegistry
             $this->models[$hash] = $model;
             $this->unregistered[] = $hash;
         }
+        if (isset($this->names[$hash]) && $alternativeName !== null && $this->names[$hash] !== $alternativeName) {
+            throw new \LogicException(
+                'Provided alternative name: '.$alternativeName.' that is different than one already known for this model: '.$this->names[$hash]
+            );
+        }
         if (!isset($this->names[$hash])) {
             $this->names[$hash] = $alternativeName ?? $this->generateModelName($model);
         }
@@ -155,15 +160,23 @@ final class ModelRegistry
 
                 $hash = md5(json_encode($definition));
                 if (isset($hashes[$hash])) {
-                    $baseName = $hashes[$hash][0];
+                    foreach ($hashes[$hash] as $baseName => $definition) {
+                        if ($this->sameModelNameBase($baseName, $modelName) === false) {
+                            continue;
+                        }
 
-                    if (!isset($duplicates[$baseName])) {
-                        $duplicates[$baseName] = [];
+                        if (!isset($duplicates[$baseName])) {
+                            $duplicates[$baseName] = [];
+                        }
+
+                        $duplicates[$baseName][] = $modelName;
+                    }
+                } else {
+                    if (!isset($hashes[$hash])) {
+                        $hashes[$hash] = [];
                     }
 
-                    $duplicates[$baseName][] = $modelName;
-                } else {
-                    $hashes[$hash] = [$modelName, $definition];
+                    $hashes[$hash][$modelName] = $definition;
                 }
             }
 
@@ -212,6 +225,21 @@ final class ModelRegistry
 
 
         $this->api->merge($array);
+    }
+
+    private function sameModelNameBase(string $baseName, string $modelName)
+    {
+        $search = [];
+        $replace = [];
+
+        for ($i = 0; $i < 10; $i++) {
+            $search[] = (string)$i;
+            $replace[] = '';
+        }
+
+        return
+            str_replace($search, $replace, $baseName) ===
+            str_replace($search, $replace, $modelName);
     }
 
     private function generateModelName(Model $model): string

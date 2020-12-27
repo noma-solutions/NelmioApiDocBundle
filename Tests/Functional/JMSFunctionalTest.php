@@ -223,7 +223,7 @@ class JMSFunctionalTest extends WebTestCase
                     'type' => 'integer',
                 ],
                 'complex' => [
-                    '$ref' => '#/definitions/JMSComplex2',
+                    '$ref' => '#/definitions/JMSComplex',
                 ],
                 'user' => [
                     '$ref' => '#/definitions/JMSUser',
