@@ -43,13 +43,16 @@ final class ModelRegistry
         $this->alternativeNames = []; // last rule wins
 
         foreach (array_reverse($alternativeNames) as $alternativeName => $criteria) {
-            $this->alternativeNames[] = $model = new Model(new Type('object', false, $criteria['type']), $criteria['groups']);
+            $this->alternativeNames[] = $model = new Model(
+                new Type('object', false, $criteria['type']),
+                $criteria['groups']
+            );
             $this->names[$model->getHash()] = $alternativeName;
             $this->api->getDefinitions()->get($alternativeName);
         }
     }
 
-    public function register(Model $model): string
+    public function register(Model $model, string $alternativeName = null): string
     {
         $hash = $model->getHash();
         if (!isset($this->models[$hash])) {
@@ -57,7 +60,7 @@ final class ModelRegistry
             $this->unregistered[] = $hash;
         }
         if (!isset($this->names[$hash])) {
-            $this->names[$hash] = $this->generateModelName($model);
+            $this->names[$hash] = $alternativeName ?? $this->generateModelName($model);
         }
 
         // Reserve the name
@@ -93,7 +96,12 @@ final class ModelRegistry
                 }
 
                 if (null === $schema) {
-                    throw new \LogicException(sprintf('Schema of type "%s" can\'t be generated, no describer supports it.', $this->typeToString($model->getType())));
+                    throw new \LogicException(
+                        sprintf(
+                            'Schema of type "%s" can\'t be generated, no describer supports it.',
+                            $this->typeToString($model->getType())
+                        )
+                    );
                 }
 
                 $this->api->getDefinitions()->set($name, $schema);
@@ -107,6 +115,103 @@ final class ModelRegistry
             $this->alternativeNames = [];
             $this->registerDefinitions();
         }
+
+        $this->removeDuplicates($this->api);
+    }
+
+    private function removeDuplicates(Swagger $api)
+    {
+        $array = $api->toArray();
+
+        $search = true;
+
+        $i = 0;
+
+        while ($search !== false || $i++ > 100) {
+            $hashes = [];
+            $definitionUses = [];
+            $pathUses = [];
+            $duplicates = [];
+
+            foreach ($array['definitions'] ?? [] as $modelName => $definition) {
+                foreach ($definition['properties'] ?? [] as $propertyName => $property) {
+                    $ref = $property['$ref'] ?? null;
+                    $itemsRef = $property['items']['$ref'] ?? null;
+
+                    if ($ref) {
+                        $refModelName = str_replace('#/definitions/', '', $ref);
+                        if (!isset($definitionUses[$refModelName])) {
+                            $definitionUses[$refModelName] = [];
+                        }
+                        $definitionUses[$refModelName][] = [$modelName, $propertyName, '$ref'];
+                    } elseif ($itemsRef) {
+                        $refModelName = str_replace('#/definitions/', '', $itemsRef);
+                        if (!isset($definitionUses[$refModelName])) {
+                            $definitionUses[$refModelName] = [];
+                        }
+                        $definitionUses[$refModelName][] = [$modelName, $propertyName, 'items'];
+                    }
+                }
+
+                $hash = md5(json_encode($definition));
+                if (isset($hashes[$hash])) {
+                    $baseName = $hashes[$hash][0];
+
+                    if (!isset($duplicates[$baseName])) {
+                        $duplicates[$baseName] = [];
+                    }
+
+                    $duplicates[$baseName][] = $modelName;
+                } else {
+                    $hashes[$hash] = [$modelName, $definition];
+                }
+            }
+
+            if (count($duplicates) === 0) {
+                $search = false;
+            }
+
+            foreach ($array['paths'] ?? [] as $pathName => $pathMethods) {
+                foreach ($pathMethods as $methodName => $methodData) {
+                    foreach ($methodData['responses'] as $code => $responseData) {
+                        $schemaRef = $responseData['schema']['$ref'] ?? null;
+                        $modelName = str_replace('#/definitions/', '', $schemaRef);
+                        if (!isset($pathUses[$modelName])) {
+                            $pathUses[$modelName] = [];
+                        }
+                        $pathUses[$modelName][] = [$pathName, $methodName, $code];
+                    }
+                }
+            }
+
+            foreach ($duplicates as $baseModelName => $duplicatedNames) {
+                foreach ($duplicatedNames as $duplicatedName) {
+                    if (isset($definitionUses[$duplicatedName])) {
+                        foreach ($definitionUses[$duplicatedName] as $usedIn) {
+                            list($usedInModelName, $usedInProperty, $usedInType) = $usedIn;
+                            if ($usedInType === 'items') {
+                                $array['definitions'][$usedInModelName]['properties'][$usedInProperty]['items']['$ref'] = '#/definitions/'.$baseModelName;
+                            } else {
+                                $array['definitions'][$usedInModelName]['properties'][$usedInProperty]['$ref'] = '#/definitions/'.$baseModelName;
+                            }
+                        }
+                    }
+
+                    if (isset($pathUses[$duplicatedName])) {
+                        foreach ($pathUses[$duplicatedName] as $pathUseData) {
+                            list($pathName, $methodName, $code) = $pathUseData;
+                            $array['paths'][$pathName][$methodName]['responses'][$code]['schema']['$ref'] = '#/definitions/'.$baseModelName;
+                        }
+                    }
+
+                    unset($array['definitions'][$duplicatedName]);
+                    $this->api->getDefinitions()->remove($duplicatedName);
+                }
+            }
+        }
+
+
+        $this->api->merge($array);
     }
 
     private function generateModelName(Model $model): string
