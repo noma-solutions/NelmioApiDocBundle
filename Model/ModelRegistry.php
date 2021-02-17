@@ -59,11 +59,6 @@ final class ModelRegistry
             $this->models[$hash] = $model;
             $this->unregistered[] = $hash;
         }
-        if (isset($this->names[$hash]) && $alternativeName !== null && $this->names[$hash] !== $alternativeName) {
-            throw new \LogicException(
-                'Provided alternative name: '.$alternativeName.' that is different than one already known for this model: '.$this->names[$hash]
-            );
-        }
         if (!isset($this->names[$hash])) {
             $this->names[$hash] = $alternativeName ?? $this->generateModelName($model);
         }
