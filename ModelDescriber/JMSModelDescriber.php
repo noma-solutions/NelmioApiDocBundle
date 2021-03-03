@@ -249,7 +249,6 @@ class JMSModelDescriber implements ModelDescriberInterface, ModelRegistryAwareIn
             $property->setFormat($type['name']);
         } elseif (is_subclass_of($type['name'], \DateTimeInterface::class)) {
             $property->setType('string');
-            $property->setFormat('date-time');
         } else {
             $groups = $this->computeGroups($context, $type);
 

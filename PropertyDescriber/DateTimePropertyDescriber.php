@@ -19,7 +19,6 @@ class DateTimePropertyDescriber implements PropertyDescriberInterface
     public function describe(Type $type, Schema $property, array $groups = null)
     {
         $property->setType('string');
-        $property->setFormat('date-time');
     }
 
     public function supports(Type $type): bool

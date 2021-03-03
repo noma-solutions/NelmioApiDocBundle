@@ -158,7 +158,6 @@ final class FormModelDescriber implements ModelDescriberInterface, ModelRegistry
 
             if ('datetime' === $blockPrefix) {
                 $property->setType('string');
-                $property->setFormat('date-time');
 
                 break;
             }

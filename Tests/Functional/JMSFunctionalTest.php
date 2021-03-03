@@ -119,12 +119,10 @@ class JMSFunctionalTest extends WebTestCase
                     'type' => 'object',
                     'additionalProperties' => [
                         'type' => 'string',
-                        'format' => 'date-time',
                     ],
                 ],
                 'custom_date' => [
                     'type' => 'string',
-                    'format' => 'date-time',
                 ],
                 'best_friend' => [
                     '$ref' => '#/definitions/User',
@@ -168,7 +166,6 @@ class JMSFunctionalTest extends WebTestCase
                         'type' => 'object',
                         'additionalProperties' => [
                             'type' => 'string',
-                            'format' => 'date-time',
                         ],
                     ],
                 ],
@@ -178,7 +175,6 @@ class JMSFunctionalTest extends WebTestCase
                         'type' => 'array',
                         'items' => [
                             'type' => 'string',
-                            'format' => 'date-time',
                         ],
                     ],
                 ],

@@ -179,7 +179,6 @@ class FunctionalTest extends WebTestCase
                     ],
                     'creationDate' => [
                         'type' => 'string',
-                        'format' => 'date-time',
                     ],
                     'users' => [
                         'items' => [
@@ -199,7 +198,6 @@ class FunctionalTest extends WebTestCase
                     ],
                     'dateAsInterface' => [
                         'type' => 'string',
-                        'format' => 'date-time',
                     ],
                 ],
             ],
