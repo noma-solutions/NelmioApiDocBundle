@@ -1,6 +1,11 @@
 CHANGELOG
 =========
 
+3.7.1
+-----
+
+* Fixes overwriting models with different hashes (name + serialization groups) 
+
 3.7.0
 -----
 

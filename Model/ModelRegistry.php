@@ -23,9 +23,14 @@ final class ModelRegistry
 
     private $unregistered = [];
 
+    /**
+     * @var Model[]
+     */
     private $models = [];
 
     private $names = [];
+
+    private $namesCounter = [];
 
     private $modelDescribers = [];
 
@@ -55,12 +60,14 @@ final class ModelRegistry
     public function register(Model $model, string $alternativeName = null): string
     {
         $hash = $model->getHash();
+
         if (!isset($this->models[$hash])) {
             $this->models[$hash] = $model;
             $this->unregistered[] = $hash;
         }
         if (!isset($this->names[$hash])) {
-            $this->names[$hash] = $alternativeName ?? $this->generateModelName($model);
+            $name = $alternativeName ?? $this->generateModelName($model->getType());
+            $this->names[$hash] = $name;
         }
 
         // Reserve the name
@@ -75,12 +82,26 @@ final class ModelRegistry
     public function registerDefinitions()
     {
         while (count($this->unregistered)) {
+            /** @var Model[] $tmp */
             $tmp = [];
             foreach ($this->unregistered as $hash) {
-                $tmp[$this->names[$hash]] = $this->models[$hash];
+                $hashName = $this->names[$hash];
+                if (
+                    isset($tmp[$hashName]) &&
+                    $tmp[$hashName]->getHash() !== $hash
+                ) {
+                    $counter = $this->namesCounter[$hashName] ?? 1;
+                    $this->namesCounter[$hashName] = $counter + 1;
+                    $hashName = $hashName . $counter;
+                }
+                $tmp[$hashName] = $this->models[$hash];
             }
             $this->unregistered = [];
 
+            /**
+             * @var  $name
+             * @var Model $model
+             */
             foreach ($tmp as $name => $model) {
                 $schema = null;
                 foreach ($this->modelDescribers as $modelDescriber) {
@@ -237,11 +258,11 @@ final class ModelRegistry
             str_replace($search, $replace, $modelName);
     }
 
-    private function generateModelName(Model $model): string
+    private function generateModelName(Type $type): string
     {
         $definitions = $this->api->getDefinitions();
 
-        $name = $base = $this->getTypeShortName($model->getType());
+        $name = $base = $this->getTypeShortName($type);
 
         $i = 1;
         while ($definitions->has($name)) {
