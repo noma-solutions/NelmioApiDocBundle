@@ -27,6 +27,7 @@ use Symfony\Component\DependencyInjection\Definition;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 use Symfony\Component\DependencyInjection\Reference;
+use Symfony\Component\DependencyInjection\ServiceLocator;
 use Symfony\Component\HttpKernel\DependencyInjection\Extension;
 use Symfony\Component\Routing\RouteCollection;
 
@@ -87,7 +88,7 @@ final class NelmioApiDocExtension extends Extension implements PrependExtensionI
                 ->setArguments([
                     new Reference(sprintf('nelmio_api_doc.routes.%s', $area)),
                     new Reference('nelmio_api_doc.controller_reflector'),
-                    new Reference('annotation_reader'),
+                    new Reference('annotations.reader'),
                     new Reference('logger'),
                 ])
                 ->addTag(sprintf('nelmio_api_doc.describer.%s', $area), ['priority' => -200]);
@@ -105,6 +106,7 @@ final class NelmioApiDocExtension extends Extension implements PrependExtensionI
                 && 0 === count($areaConfig['host_patterns'])
                 && 0 === count($areaConfig['name_patterns'])
                 && false === $areaConfig['with_annotation']
+                && false === $areaConfig['disable_default_routes']
             ) {
                 $container->setDefinition(sprintf('nelmio_api_doc.routes.%s', $area), $routesDefinition)
                     ->setPublic(false);
@@ -127,7 +129,7 @@ final class NelmioApiDocExtension extends Extension implements PrependExtensionI
             }
         }
 
-        $container->register('nelmio_api_doc.generator_locator')
+        $container->register('nelmio_api_doc.generator_locator', ServiceLocator::class)
             ->setPublic(false)
             ->addTag('container.service_locator')
             ->addArgument(array_combine(
@@ -160,7 +162,7 @@ final class NelmioApiDocExtension extends Extension implements PrependExtensionI
                 ->setArguments([
                     new Reference('jms_serializer.metadata_factory'),
                     $jmsNamingStrategy,
-                    new Reference('annotation_reader'),
+                    new Reference('annotations.reader'),
                 ])
                 ->addTag('nelmio_api_doc.model_describer', ['priority' => 50]);
 

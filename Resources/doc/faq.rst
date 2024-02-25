@@ -136,7 +136,7 @@ A: We removed the google fonts in 3.3 to avoid the external request for GDPR rea
 
 .. code-block:: twig
 
-    {# templates/bundles/NelmioApiDocBundle/SwaggerUI/index.html.twig #}
+    {# templates/bundles/NelmioApiDocBundle/SwaggerUi/index.html.twig #}
     
     {#
        To avoid a "reached nested level" error an exclamation mark `!` has to be added
@@ -197,3 +197,17 @@ A: Use ``@SWG\Tag`` annotation.
     {
         //...
     }
+
+Disable Default Section
+-----------------------
+
+Q: I don't want to render the "default" section, how do I do that?
+
+A: Use ``disable_default_routes`` config in your area.
+
+.. code-block:: yaml
+
+    nelmio_api_doc:
+        areas:
+            default:
+                disable_default_routes: true
