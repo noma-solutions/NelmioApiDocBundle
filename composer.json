@@ -70,7 +70,7 @@
     },
     "extra": {
         "branch-alias": {
-            "dev-3.x": "3.7.x-dev"
+            "dev-3.x": "3.7.1-dev"
         }
     }
 }
