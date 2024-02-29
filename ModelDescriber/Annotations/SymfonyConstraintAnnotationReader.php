@@ -66,27 +66,29 @@ class SymfonyConstraintAnnotationReader
 
                 $this->schema->setRequired(array_values(array_unique($existingRequiredFields)));
             } elseif ($annotation instanceof Assert\Length) {
-                $property->setMinLength($annotation->min);
-                $property->setMaxLength($annotation->max);
+                $property->setMinLength($annotation->min !== null ? (int) $annotation->min : null);
+                $property->setMaxLength($annotation->max !== null ? (int) $annotation->max : null);
             } elseif ($annotation instanceof Assert\Regex) {
                 $this->appendPattern($property, $annotation->getHtmlPattern());
             } elseif ($annotation instanceof Assert\Count) {
-                $property->setMinItems($annotation->min);
-                $property->setMaxItems($annotation->max);
+                $property->setMinItems($annotation->min !== null ? (int) $annotation->min : null);
+                $property->setMaxItems($annotation->max !== null ? (int) $annotation->max : null);
             } elseif ($annotation instanceof Assert\Choice) {
                 $values = $annotation->callback ? call_user_func(is_array($annotation->callback) ? $annotation->callback : [$reflection->class, $annotation->callback]) : $annotation->choices;
                 $property->setEnum(array_values($values));
             } elseif ($annotation instanceof Assert\Range) {
-                $property->setMinimum($annotation->min);
-                $property->setMaximum($annotation->max);
+                $property->setMinimum($annotation->min !== null ? (float) $annotation->min : null);
+                $property->setMaximum($annotation->max !== null ? (float) $annotation->max : null);
             } elseif ($annotation instanceof Assert\LessThan) {
-                $property->setExclusiveMaximum($annotation->value);
+                $property->setExclusiveMaximum(true);
+                $property->setMaximum($annotation->value !== null ? (float) $annotation->value : null);
             } elseif ($annotation instanceof Assert\LessThanOrEqual) {
-                $property->setMaximum($annotation->value);
+                $property->setMaximum($annotation->value !== null ? (float) $annotation->value : null);
             } elseif ($annotation instanceof Assert\GreaterThan) {
-                $property->setExclusiveMinimum($annotation->value);
+                $property->setExclusiveMinimum(true);
+                $property->setMinimum($annotation->value !== null ? (float) $annotation->value : null);
             } elseif ($annotation instanceof Assert\GreaterThanOrEqual) {
-                $property->setMinimum($annotation->value);
+                $property->setMinimum($annotation->value !== null ? (float) $annotation->value : null);
             }
         }
     }

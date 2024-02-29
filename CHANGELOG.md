@@ -1,6 +1,12 @@
 CHANGELOG
 =========
 
+3.10.1
+-----
+
+* Fixes wrong type of int and float values for minimum/maximum properties
+
+
 3.10.0
 -----
 
