@@ -30,9 +30,9 @@ final class ModelRegistry
 
     private $names = [];
 
-    private $namesCounter = [];
-
     private $modelDescribers = [];
+
+    private $namesHashesCounter = [];
 
     private $api;
 
@@ -67,7 +67,16 @@ final class ModelRegistry
         }
         if (!isset($this->names[$hash])) {
             $name = $alternativeName ?? $this->generateModelName($model->getType());
+            $this->namesHashesCounter[$name][$hash] = true;
+
+            $counter = count($this->namesHashesCounter[$name]);
+
+            if ($counter > 1) {
+                $name = $name . ($counter - 1);
+            }
+
             $this->names[$hash] = $name;
+
         }
 
         // Reserve the name
@@ -86,14 +95,7 @@ final class ModelRegistry
             $tmp = [];
             foreach ($this->unregistered as $hash) {
                 $hashName = $this->names[$hash];
-                if (
-                    isset($tmp[$hashName]) &&
-                    $tmp[$hashName]->getHash() !== $hash
-                ) {
-                    $counter = $this->namesCounter[$hashName] ?? 1;
-                    $this->namesCounter[$hashName] = $counter + 1;
-                    $hashName = $hashName . $counter;
-                }
+
                 $tmp[$hashName] = $this->models[$hash];
             }
             $this->unregistered = [];
