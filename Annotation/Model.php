@@ -16,6 +16,7 @@ use Swagger\Annotations\AbstractAnnotation;
 /**
  * @Annotation
  */
+#[\Attribute(\Attribute::TARGET_METHOD | \Attribute::TARGET_PROPERTY | \Attribute::TARGET_PARAMETER | \Attribute::IS_REPEATABLE)]
 final class Model extends AbstractAnnotation
 {
     /** {@inheritdoc} */
@@ -46,4 +47,32 @@ final class Model extends AbstractAnnotation
      * @var mixed[]
      */
     public $options;
+
+    /**
+     * @param array<string, mixed> $data
+     * @param string[]|null        $groups
+     * @param mixed[]|null         $options
+     */
+    public function __construct(
+        $data = [],
+        ?string $type = null,
+        ?array $groups = null,
+        ?array $options = null
+    ) {
+        if (!is_array($data)) {
+            $data = [];
+        }
+
+        parent::__construct($data);
+
+        if (null !== $type) {
+            $this->type = $type;
+        }
+        if (null !== $groups) {
+            $this->groups = $groups;
+        }
+        if (null !== $options) {
+            $this->options = $options;
+        }
+    }
 }

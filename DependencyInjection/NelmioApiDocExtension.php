@@ -88,7 +88,7 @@ final class NelmioApiDocExtension extends Extension implements PrependExtensionI
                 ->setArguments([
                     new Reference(sprintf('nelmio_api_doc.routes.%s', $area)),
                     new Reference('nelmio_api_doc.controller_reflector'),
-                    new Reference('annotations.reader'),
+                    new Reference('nelmio_api_doc.mapping_aware_reader'),
                     new Reference('logger'),
                 ])
                 ->addTag(sprintf('nelmio_api_doc.describer.%s', $area), ['priority' => -200]);
@@ -117,7 +117,7 @@ final class NelmioApiDocExtension extends Extension implements PrependExtensionI
                         (new Definition(FilteredRouteCollectionBuilder::class))
                             ->setArguments(
                                 [
-                                    new Reference('annotation_reader'),
+                                    new Reference('nelmio_api_doc.mapping_aware_reader'),
                                     new Reference('nelmio_api_doc.controller_reflector'),
                                     $area,
                                     $areaConfig,
@@ -128,6 +128,9 @@ final class NelmioApiDocExtension extends Extension implements PrependExtensionI
                     ->addArgument($routesDefinition);
             }
         }
+
+        $container->getDefinition('nelmio_api_doc.metadata_mode_resolver')
+            ->setArgument(1, $config['metadata']['default'] ?? 'annotation');
 
         $container->register('nelmio_api_doc.generator_locator', ServiceLocator::class)
             ->setPublic(false)
@@ -162,7 +165,7 @@ final class NelmioApiDocExtension extends Extension implements PrependExtensionI
                 ->setArguments([
                     new Reference('jms_serializer.metadata_factory'),
                     $jmsNamingStrategy,
-                    new Reference('annotations.reader'),
+                    new Reference('nelmio_api_doc.mapping_aware_reader'),
                 ])
                 ->addTag('nelmio_api_doc.model_describer', ['priority' => 50]);
 

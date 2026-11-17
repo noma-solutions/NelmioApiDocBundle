@@ -29,7 +29,7 @@ final class ConfigurationPass implements CompilerPassInterface
             $container->register('nelmio_api_doc.model_describers.form', FormModelDescriber::class)
                 ->setPublic(false)
                 ->addArgument(new Reference('form.factory'))
-                ->addArgument(new Reference('annotations.reader'))
+                ->addArgument(new Reference('nelmio_api_doc.mapping_aware_reader'))
                 ->addTag('nelmio_api_doc.model_describer', ['priority' => 100]);
         }
     }

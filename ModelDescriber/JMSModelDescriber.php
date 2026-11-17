@@ -134,14 +134,19 @@ class JMSModelDescriber implements ModelDescriberInterface, ModelRegistryAwareIn
 
                 continue;
             }
-            if (null === $item->type) {
+
+            $type = $item->type;
+            if (null === $type) {
+                $type = $this->inferTypeFromReflections($reflections);
+            }
+            if (null === $type) {
                 $properties->remove($name);
                 $context->popPropertyMetadata();
 
                 continue;
             }
 
-            $this->describeItem($item->type, $property, $context, $item);
+            $this->describeItem($type, $property, $context, $item);
             $context->popPropertyMetadata();
         }
         $context->popClassMetadata();
@@ -167,11 +172,106 @@ class JMSModelDescriber implements ModelDescriberInterface, ModelRegistryAwareIn
             $context = SerializationContext::create();
 
             if (null !== $model->getGroups()) {
-                $context->addExclusionStrategy(new GroupsExclusionStrategy($model->getGroups()));
+                $context->addExclusionStrategy(
+                    new GroupsExclusionStrategy($this->normalizeSerializationGroups($model->getGroups()))
+                );
             }
         }
 
         return $context;
+    }
+
+    /**
+     * Project uses lowercase "default"; JMS treats ungrouped properties as "Default".
+     *
+     * @param string[] $groups
+     *
+     * @return string[]
+     */
+    private function normalizeSerializationGroups(array $groups): array
+    {
+        $hasDefault = in_array('default', $groups, true)
+            || in_array(GroupsExclusionStrategy::DEFAULT_GROUP, $groups, true);
+
+        if (!$hasDefault) {
+            return $groups;
+        }
+
+        if (!in_array('default', $groups, true)) {
+            $groups[] = 'default';
+        }
+        if (!in_array(GroupsExclusionStrategy::DEFAULT_GROUP, $groups, true)) {
+            $groups[] = GroupsExclusionStrategy::DEFAULT_GROUP;
+        }
+
+        return $groups;
+    }
+
+    /**
+     * Fallback when JMS metadata has no type (e.g. Serializer attrs left on constructor after migration).
+     *
+     * @param array<\ReflectionProperty|\ReflectionMethod> $reflections
+     *
+     * @return array{name: string, params: array}|null
+     */
+    private function inferTypeFromReflections(array $reflections): ?array
+    {
+        foreach ($reflections as $reflection) {
+            if ($reflection instanceof \ReflectionProperty && $reflection->hasType()) {
+                $type = $reflection->getType();
+                if ($type instanceof \ReflectionNamedType && !$type->isBuiltin()) {
+                    return ['name' => $type->getName(), 'params' => []];
+                }
+                if ($type instanceof \ReflectionNamedType) {
+                    return $this->mapPhpBuiltinType($type->getName());
+                }
+            }
+
+            $docComment = $reflection->getDocComment();
+            if (!is_string($docComment) || !preg_match('/@var\s+([^\s*]+)/', $docComment, $matches)) {
+                continue;
+            }
+
+            $varType = ltrim($matches[1], '\\');
+            if (preg_match('/^array(?:<[^>]+>)?(\[\])?$/', $varType) || 'array' === $varType) {
+                return ['name' => 'array', 'params' => []];
+            }
+
+            $builtin = $this->mapPhpBuiltinType($varType);
+            if (null !== $builtin) {
+                return $builtin;
+            }
+
+            if (class_exists($varType) || interface_exists($varType)) {
+                return ['name' => $varType, 'params' => []];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * @return array{name: string, params: array}|null
+     */
+    private function mapPhpBuiltinType(string $type): ?array
+    {
+        switch (strtolower($type)) {
+            case 'bool':
+            case 'boolean':
+                return ['name' => 'boolean', 'params' => []];
+            case 'int':
+            case 'integer':
+                return ['name' => 'integer', 'params' => []];
+            case 'float':
+            case 'double':
+                return ['name' => 'float', 'params' => []];
+            case 'string':
+                return ['name' => 'string', 'params' => []];
+            case 'array':
+                return ['name' => 'array', 'params' => []];
+            default:
+                return null;
+        }
     }
 
     private function computeGroups(Context $context, array $type = null)

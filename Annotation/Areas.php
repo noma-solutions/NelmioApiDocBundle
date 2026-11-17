@@ -14,24 +14,34 @@ namespace Nelmio\ApiDocBundle\Annotation;
 /**
  * @Annotation
  */
+#[\Attribute(\Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 final class Areas
 {
     /** @var string[] */
     private $areas;
 
-    public function __construct(array $properties)
+    /**
+     * @param string[]|array{value?: string[]} $value Doctrine annotation uses ['value' => [...]]; PHP attribute uses a list
+     */
+    public function __construct(array $value = [])
     {
-        if (!array_key_exists('value', $properties) || !is_array($properties['value'])) {
+        if (array_key_exists('value', $value) && is_array($value['value'])) {
+            $areasList = $value['value'];
+        } else {
+            $areasList = $value;
+        }
+
+        if (!is_array($areasList)) {
             throw new \InvalidArgumentException('An array of areas was expected');
         }
 
         $areas = [];
-        foreach ($properties['value'] as $area) {
+        foreach ($areasList as $area) {
             if (!is_string($area)) {
                 throw new \InvalidArgumentException('An area must be given as a string');
             }
 
-            if (!in_array($area, $areas)) {
+            if (!in_array($area, $areas, true)) {
                 $areas[] = $area;
             }
         }

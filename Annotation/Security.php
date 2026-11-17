@@ -16,6 +16,7 @@ use Swagger\Annotations\AbstractAnnotation;
 /**
  * @Annotation
  */
+#[\Attribute(\Attribute::TARGET_CLASS | \Attribute::TARGET_METHOD | \Attribute::IS_REPEATABLE)]
 class Security extends AbstractAnnotation
 {
     /** {@inheritdoc} */
@@ -29,4 +30,20 @@ class Security extends AbstractAnnotation
      * @var string
      */
     public $name;
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    public function __construct($data = [], ?string $name = null)
+    {
+        if (!is_array($data)) {
+            $data = [];
+        }
+
+        parent::__construct($data);
+
+        if (null !== $name) {
+            $this->name = $name;
+        }
+    }
 }

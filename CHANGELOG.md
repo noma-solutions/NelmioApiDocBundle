@@ -1,6 +1,30 @@
 CHANGELOG
 =========
 
+4.0.0
+-----
+
+BC breaks
+* Raised minimum requirements to PHP `>=8.2` and Symfony `^5.4|^6.0|^7.0`
+  (dropped Symfony 3.4 / 4.x and PHP versions below 8.2).
+
+Added
+* PHP attributes support on `Areas`, `Model`, `Operation` and `Security` (still compatible with Doctrine annotations).
+* `MappingAwareAnnotationReader` merges PHP attributes and docblock annotations for API metadata.
+  Preference (order) is resolved from Doctrine ORM mapping `type` per namespace prefix, with fallback
+  `nelmio_api_doc.metadata.default` (default: `annotation`).
+  Attribute reading is limited to Nelmio/Swagger metadata; annotation reading stays unfiltered so
+  FOSRest / Assert docblocks keep working.
+* Optional override via container parameter `noma_solutions_api.metadata_mode_rules` (wins over Doctrine mappings).
+* JMS: normalize serialization groups so project `default` and JMS `Default` are treated together.
+* JMS: infer property types from PHP typed properties / `@var` when JMS metadata has no type
+  (common after migrating Serializer metadata to attributes).
+
+Fixed
+* Register `AnnotationRegistry::registerUniqueLoader('class_exists')` on bundle boot so swagger-php's
+  whitelist loader no longer blocks JMS / other annotations during `/api/doc` generation.
+
+
 3.10.2
 -----
 
