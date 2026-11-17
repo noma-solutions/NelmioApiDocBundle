@@ -1,6 +1,6 @@
 {
     "name": "noma-solutions/api-doc-bundle",
-    "version": "4.0.0",
+    "version": "4.2.0",
     "description": "Enhanced version of NelmioApiDoc that generates documentation for your REST API from annotations",
     "keywords": ["api", "documentation", "doc", "rest"],
     "type": "symfony-bundle",
